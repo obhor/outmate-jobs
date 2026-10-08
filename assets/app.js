@@ -14,6 +14,7 @@ export function buildParams(f) {
   for (const e of f.employment || []) p.append("employment_type_or", EMPLOYMENT[e] || e);
   for (const s of f.seniority || []) p.append("job_seniority_or", s);
   if (f.country) p.set("job_country_code_or", f.country);
+  if (f.company) p.set("company_name_or", f.company);
   p.set("posted_at_max_age_days", DAYS[f.since] ?? "30");
   if (f.cursor) p.set("cursor", f.cursor);
   return p;
@@ -84,6 +85,21 @@ function row(job) {
 </div>`;
 }
 
+function companyTile(c) {
+  const name = c.name || "";
+  const tile = c.logo
+    ? `<img src="${esc(c.logo)}" loading="lazy" alt="" class="size-full object-contain object-center">`
+    : `<span class="size-full flex items-center justify-center text-base font-semibold text-gray-500" style="background:hsl(${hue(name)} 55% 92%)">${esc(name.trim()[0] || "?")}</span>`;
+  const meta = [c.employee_count ? `${c.employee_count.toLocaleString()} employees` : "", c.hq_city || c.hq_country || ""].filter(Boolean).join(" · ");
+  return `<button type="button" data-company="${esc(name)}" class="rounded-md p-3 border border-black/10 dark:border-white/10 hover:shadow-lg hover:border-black/20 dark:hover:border-white/20 transition duration-300 flex flex-col gap-1.5 dark:bg-gray-800 cursor-pointer w-full text-left">
+  <div class="flex gap-2 items-center">
+    <div class="relative block shrink-0 size-6 overflow-hidden bg-white dark:bg-gray-100 rounded-sm">${tile}<div class="absolute inset-0 rounded-sm ring-1 ring-inset ring-black/10 dark:ring-white/10"></div></div>
+    <h4 class="font-bold dark:text-white truncate">${esc(name)}</h4>
+  </div>
+  <div class="text-xs leading-snug text-gray-600 dark:text-gray-400"><span class="font-semibold tabular-nums text-gray-900 dark:text-gray-100">${(c.jobs || 0).toLocaleString()}</span> open roles${meta ? ` &middot; ${esc(meta)}` : ""}</div>
+</button>`;
+}
+
 function init() {
   const form = document.getElementById("filters");
   const list = document.getElementById("job-list");
@@ -91,15 +107,23 @@ function init() {
   const loading = document.getElementById("loading-state");
   const showMore = document.getElementById("show-more");
   const count = document.getElementById("result-count");
+  const companyChip = document.getElementById("company-filter");
+  const companyList = document.getElementById("company-list");
   let role = "";
+  let company = "";
   let cursor = null;
   let inflight = 0;
+
+  const showChip = (name) => {
+    companyChip.innerHTML = `Only jobs at <span class="font-bold dark:text-white">${esc(name)}</span> &middot; <button type="button" id="company-clear" class="text-gray-900 dark:text-white font-medium hover:underline cursor-pointer">clear</button>`;
+  };
 
   async function load({ append = false } = {}) {
     const state = readFilters(form, role);
     // URLSearchParams serializes spaces as "+", which the API's query parser takes
     // literally; %20 is unambiguous
-    const qs = buildParams({ ...state, cursor: append ? cursor : null }).toString().replace(/\+/g, "%20");
+    const qs = buildParams({ ...state, company, cursor: append ? cursor : null }).toString().replace(/\+/g, "%20");
+    companyChip.classList.toggle("hidden", !company);
     const token = ++inflight;
     loading.classList.remove("hidden");
     if (!append) {
@@ -148,6 +172,36 @@ function init() {
     if (box) { box.checked = true; load(); }
   });
   showMore.addEventListener("click", () => load({ append: true }));
+  companyList.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-company]");
+    if (!btn) return;
+    company = btn.dataset.company;
+    role = "";
+    showChip(company);
+    document.getElementById("jobs").scrollIntoView({ behavior: "smooth" });
+    load();
+  });
+  companyChip.addEventListener("click", (e) => {
+    if (!e.target.closest("#company-clear")) return;
+    company = "";
+    load();
+  });
+
+  // fixed 30-day GTM spotlight, independent of the filter form; if it fails the
+  // section hides rather than showing a bare heading
+  (async () => {
+    try {
+      const res = await fetch("/api/jobs?view=companies&limit=8");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+      const html = (data.companies || []).map(companyTile).join("");
+      if (!html) throw new Error("empty");
+      companyList.innerHTML = html;
+    } catch {
+      document.getElementById("hiring").classList.add("hidden");
+    }
+  })();
+
   load();
 }
 

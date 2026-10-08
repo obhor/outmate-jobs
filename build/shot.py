@@ -56,7 +56,7 @@ wait(send("Log.enable"))
 wait(send("Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}))
 navigate = send("Page.navigate", {"url": URL})
 wait(navigate)
-time.sleep(6)
+time.sleep(14)
 
 info = wait(send("Runtime.evaluate", {"expression": """JSON.stringify({
   title: document.title,
@@ -67,6 +67,9 @@ info = wait(send("Runtime.evaluate", {"expression": """JSON.stringify({
   firstTitle: document.querySelector('#job-list a div')?.textContent,
   font: getComputedStyle(document.body).fontFamily,
   imgOk: [...document.images].filter(i => i.naturalWidth === 0 && i.clientWidth > 0).length,
+  tiles: document.querySelectorAll('#company-list > button').length,
+  firstTile: document.querySelector('#company-list > button')?.textContent?.trim(),
+  hiringHidden: document.getElementById('hiring')?.classList.contains('hidden'),
 })""", "returnByValue": True}))
 print(info.get("result", {}).get("value"))
 shot = wait(send("Page.captureScreenshot", {"captureBeyondViewport": True, "format": "png"}))

@@ -23,11 +23,7 @@
    Outmate Jobs – GTM, sales, marketing and customer success jobs
   </title>
   <meta content="Outmate Jobs indexes go-to-market roles — sales, marketing, customer success and revenue operations — from thousands of live job sources via the JobsPipe API." name="description"/>
-  <html>
-   <head>
-    <link href="/assets/outmate-mark.webp" rel="icon"/>
-   </head>
-  </html>
+  <link href="/assets/outmate-mark.webp" rel="icon"/>
  </head>
  <body class="posts dark:bg-gray-900 dark:text-white" data-controller="mark-visited-links search" data-plus-locked="true" data-rails-action="index" data-rails-controller="posts" id="posts-index">
   <svg aria-hidden="true" style="display:none" xmlns="http://www.w3.org/2000/svg">
@@ -130,27 +126,23 @@
   </svg>
   <div class="relative bg-white dark:bg-gray-900 z-20 border-b border-gray-100 dark:border-gray-800" data-controller="transition">
    <div class="flex justify-between items-center px-4 py-6 sm:px-6">
-    <html>
-     <body>
-      <div class="flex items-center gap-3 shrink-0">
-       <img alt="" class="size-8 sm:h-10 sm:w-10 rounded-sm" src="/assets/outmate-mark.webp"/>
-       <span class="text-lg sm:text-xl font-bold tracking-tight whitespace-nowrap">
-        Outmate Jobs
-       </span>
-      </div>
-      <nav class="flex items-center gap-1 sm:gap-2">
-       <a class="px-3 py-1 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white" href="#jobs">
-        Browse Jobs
-       </a>
-       <a class="px-3 py-1 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white" href="#roles">
-        Roles
-       </a>
-       <a class="hidden sm:inline-block px-3 py-1 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white" href="https://docs.jobspipe.dev" rel="noopener">
-        Jobs API
-       </a>
-      </nav>
-     </body>
-    </html>
+    <div class="flex items-center gap-3 shrink-0">
+     <img alt="" class="size-8 sm:h-10 sm:w-10 rounded-sm" src="/assets/outmate-mark.webp"/>
+     <span class="text-lg sm:text-xl font-bold tracking-tight whitespace-nowrap">
+      Outmate Jobs
+     </span>
+    </div>
+    <nav class="flex items-center gap-1 sm:gap-2">
+     <a class="px-3 py-1 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white" href="#jobs">
+      Browse Jobs
+     </a>
+     <a class="px-3 py-1 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white" href="#roles">
+      Roles
+     </a>
+     <a class="hidden sm:inline-block px-3 py-1 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white" href="https://docs.jobspipe.dev" rel="noopener">
+      Jobs API
+     </a>
+    </nav>
    </div>
   </div>
   <main class="min-h-screen">
@@ -354,6 +346,18 @@
      </form>
     </section>
     <div data-search-target="placeholder">
+     <section class="mt-8" id="hiring">
+      <div class="flex flex-wrap gap-x-3 gap-y-1 items-center">
+       <h3 class="uppercase font-medium text-sm tracking-wide text-gray-600 dark:text-gray-400">
+        Hiring Now
+       </h3>
+       <span class="text-xs text-gray-500 dark:text-gray-400">
+        Companies with the most open go-to-market roles
+       </span>
+      </div>
+      <div class="mt-2 mb-8 grid grid-cols-2 md:grid-cols-4 gap-3" id="company-list">
+      </div>
+     </section>
      <section id="roles">
       <h3 class="text-2xl md:text-4xl font-bold text-center my-4 md:my-8 dark:text-white">
        Browse jobs by role
@@ -722,17 +726,15 @@
         </span>
        </div>
       </div>
+      <div class="hidden px-3 py-2 text-sm text-gray-500 dark:text-gray-400" id="company-filter">
+      </div>
       <div class="flex flex-col divide-y divide-gray-100 dark:divide-gray-800" data-search-target="hits" id="job-list">
       </div>
       <button class="hidden block w-full p-4 text-center rounded-sm bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer font-medium" data-search-target="nextPage" href="#" id="show-more" type="button">
        Show more results
       </button>
-      <html>
-       <body>
-        <p class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400" id="result-count">
-        </p>
-       </body>
-      </html>
+      <p class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400" id="result-count">
+      </p>
      </div>
     </section>
    </div>
@@ -759,11 +761,7 @@
     </div>
    </section>
   </footer>
-  <html>
-   <head>
-    <script src="/assets/app.js" type="module">
-    </script>
-   </head>
-  </html>
+  <script src="/assets/app.js" type="module">
+  </script>
  </body>
 </html>

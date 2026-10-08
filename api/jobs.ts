@@ -5,6 +5,7 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 // proxy; the whitelists exist because JobsPipe 400s on unknown/misspelled fields.
 
 const UPSTREAM = "https://api.jobspipe.dev/v1/jobs/search";
+const COMPANIES_UPSTREAM = "https://api.jobspipe.dev/v1/jobs/companies";
 const ARRANGEMENTS = ["remote", "hybrid", "onsite"];
 const SENIORITIES = ["entry_level", "mid_level", "senior", "director", "executive"];
 const EMPLOYMENT = ["full-time", "part-time", "contract", "temporary", "internship"];
@@ -48,6 +49,13 @@ export default async function handler(
   const key = process.env.JOBSPIPE_API_KEY;
   if (!key) return send(res, 502, { error: "Jobs API key not configured." });
 
+  const call = (url: string, payload: unknown) =>
+    fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+      body: JSON.stringify(payload),
+    });
+
   const age = str("posted_at_max_age_days");
   const titles = arr("job_title_or").map((t) => t.slice(0, 60)).filter(Boolean).slice(0, 15);
   const body: Record<string, unknown> = {
@@ -73,16 +81,52 @@ export default async function handler(
     .slice(0, 15);
   if (countries.length) body.job_country_code_or = countries;
 
+  const companyNames = arr("company_name_or").map((c) => c.slice(0, 80)).filter(Boolean).slice(0, 15);
+  if (companyNames.length) body.company_name_or = companyNames;
+
   const cursor = str("cursor");
   if (cursor) body.cursor = cursor;
 
+  // the "Hiring Now" grid: same filters, grouped by company, ranked by open roles
+  if (str("view") === "companies") {
+    let up: Response;
+    try {
+      up = await call(COMPANIES_UPSTREAM, {
+        ...body,
+        limit: int(str("limit"), 1, 25, 8),
+        known_company_only: true,
+        // staffing/broker firms aren't employers; same quality knob as the feed
+        employer_type_not: ["agency", "broker"],
+      });
+    } catch {
+      return send(res, 502, { error: "Jobs provider unreachable. Try again shortly." });
+    }
+    if (!up.ok) {
+      const text = await up.text().catch(() => "");
+      return send(res, 502, { error: `Jobs provider error (${up.status}): ${text.slice(0, 200)}` });
+    }
+    const d = (await up.json()) as {
+      data?: Record<string, unknown>[];
+      metadata?: { total_companies?: number };
+    };
+    // parent entities carry 0 jobs of their own; their postings sit in the subtree
+    const companies = (d.data ?? [])
+      .filter((c) => Number(c.jobs) > 0)
+      .map((c) => ({
+        name: (c.name as string) ?? "",
+        logo: (c.logo as string) || undefined,
+        domain: (c.domain as string) || undefined,
+        jobs: Number(c.jobs) || 0,
+        employee_count: (c.employee_count as number) ?? undefined,
+        hq_city: (c.hq_city as string) || undefined,
+        hq_country: (c.hq_country as string) || undefined,
+      }));
+    return send(res, 200, { companies, total_companies: d.metadata?.total_companies ?? null });
+  }
+
   let upstream: Response;
   try {
-    upstream = await fetch(UPSTREAM, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-      body: JSON.stringify(body),
-    });
+    upstream = await call(UPSTREAM, body);
   } catch {
     return send(res, 502, { error: "Jobs provider unreachable. Try again shortly." });
   }

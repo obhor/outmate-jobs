@@ -33,6 +33,10 @@ assert.equal(p({ role: "Account Executive" }).job_title_or, "Account Executive")
 assert.equal(p({ cursor: "abc" }).cursor, "abc");
 assert.equal(p({}).cursor, undefined);
 
+// a "Hiring Now" tile click filters the feed by exact company name
+assert.equal(p({ company: "Salesforce" }).company_name_or, "Salesforce");
+assert.equal(p({}).company_name_or, undefined);
+
 const now = Date.now();
 assert.equal(relativeTime(new Date(now - 90 * 60000).toISOString()), "2 hours ago");
 assert.equal(relativeTime(new Date(now - 30 * 3600000).toISOString()), "1 day ago");

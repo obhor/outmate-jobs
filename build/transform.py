@@ -48,7 +48,7 @@ for el in list(head.find_all("meta", attrs={"name": "viewport"})):
 stylesheet = head.find("link", rel="stylesheet")
 stylesheet["href"] = "/assets/tailwind.css"
 stylesheet.attrs.pop("data-turbo-track", None)
-head.append(BeautifulSoup('<link rel="icon" href="/assets/outmate-mark.webp">', "lxml"))
+head.append(BeautifulSoup('<link rel="icon" href="/assets/outmate-mark.webp">', "html.parser"))
 head.find("title").string = f"{BRAND} – GTM, sales, marketing and customer success jobs"
 desc = head.find("meta", attrs={"name": "description"})
 desc["content"] = f"{BRAND} indexes go-to-market roles — sales, marketing, customer success and revenue operations — from thousands of live job sources via the JobsPipe API."
@@ -70,7 +70,7 @@ bar.append(BeautifulSoup(f"""
   <a href="#roles" class="px-3 py-1 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white">Roles</a>
   <a href="https://docs.jobspipe.dev" rel="noopener" class="hidden sm:inline-block px-3 py-1 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white">Jobs API</a>
 </nav>
-""", "lxml"))
+""", "html.parser"))
 for extra in list(hdr.find_all(recursive=False)):
     if extra is not bar:
         extra.decompose()
@@ -128,9 +128,20 @@ thirty = form.find("input", id="since_30d")
 thirty["checked"] = "checked"
 
 # ---------------------------------------------------------------- job listings
+HIRING = """
+<section class="mt-8" id="hiring">
+  <div class="flex flex-wrap gap-x-3 gap-y-1 items-center">
+    <h3 class="uppercase font-medium text-sm tracking-wide text-gray-600 dark:text-gray-400">Hiring Now</h3>
+    <span class="text-xs text-gray-500 dark:text-gray-400">Companies with the most open go-to-market roles</span>
+  </div>
+  <div class="mt-2 mb-8 grid grid-cols-2 md:grid-cols-4 gap-3" id="company-list"></div>
+</section>
+"""
+# upstream's static ad slot becomes a live "most open roles" grid fed by
+# POST /v1/jobs/companies; same position, same card chrome
 spotlight = soup.find("section", id="spotlightStartups")
 if spotlight:
-    spotlight.decompose()
+    spotlight.replace_with(BeautifulSoup(HIRING, "html.parser").section)
 browse = only(soup.find("ul", class_=lambda c: c and "columns" in c), "role index")
 roles_section = browse.find_parent("section")
 # upstream ships 21 server-rendered cards from its own inventory; ours come from JobsPipe
@@ -167,6 +178,7 @@ loading["id"] = "loading-state"
 drop(shell.find("div", class_=lambda c: c and "mb-6" in c), "companies label")
 listbox = only(shell.find("div", class_=lambda c: c and "divide-y" in c), "results list")
 listbox["id"] = "job-list"
+listbox.insert_before(BeautifulSoup('<div class="hidden px-3 py-2 text-sm text-gray-500 dark:text-gray-400" id="company-filter"></div>', "html.parser"))
 showmore = only(shell.find("a", class_=lambda c: c and "text-center" in c), "show more")
 showmore.name = "button"
 showmore["type"] = "button"
@@ -175,7 +187,7 @@ showmore["class"] = ["hidden", "block", "w-full", "p-4", "text-center", "rounded
                      "bg-gray-100", "dark:bg-gray-800", "hover:bg-gray-200", "dark:hover:bg-gray-700",
                      "cursor-pointer", "font-medium"]
 showmore.string = "Show more results"
-shell.append(BeautifulSoup('<p id="result-count" class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400"></p>', "lxml"))
+shell.append(BeautifulSoup('<p id="result-count" class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400"></p>', "html.parser"))
 
 # ---------------------------------------------------------------- footer
 footer = only(soup.find("footer"), "footer")
@@ -209,7 +221,7 @@ for img in list(soup.find_all("img")):
         img.decompose()
 
 # ---------------------------------------------------------------- app
-soup.body.append(BeautifulSoup('<script type="module" src="/assets/app.js"></script>', "lxml"))
+soup.body.append(BeautifulSoup('<script type="module" src="/assets/app.js"></script>', "html.parser"))
 
 out = soup.prettify()
 out = out.replace("<!DOCTYPE html>", "<!doctype html>\n<!-- Ported from startup.jobs. Chrome + stylesheet are theirs; job data is JobsPipe. -->")
