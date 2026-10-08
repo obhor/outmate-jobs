@@ -2,7 +2,7 @@
 // Field names here must match api/jobspipe (see build/../api/jobs.ts whitelists);
 // a typo means HTTP 400 on every request, not a silent no-op.
 import assert from "node:assert/strict";
-import { buildParams, relativeTime } from "../assets/app.js";
+import { buildParams, isFresh, relativeTime } from "../assets/app.js";
 
 const p = (f) => Object.fromEntries(buildParams(f));
 
@@ -41,5 +41,10 @@ const now = Date.now();
 assert.equal(relativeTime(new Date(now - 90 * 60000).toISOString()), "2 hours ago");
 assert.equal(relativeTime(new Date(now - 30 * 3600000).toISOString()), "1 day ago");
 assert.equal(relativeTime(""), "");
+
+// the "New" badge keys off the same timestamp
+assert.equal(isFresh(new Date(now - 3600000).toISOString()), true);
+assert.equal(isFresh(new Date(now - 48 * 3600000).toISOString()), false);
+assert.equal(isFresh(""), false);
 
 console.log("params: all assertions passed");

@@ -164,7 +164,8 @@ for a in browse.find_all("a"):
     a["data-role"] = role
     a["class"] = ["hover:underline", "cursor-pointer", "text-left", "block", "w-full"]
     a.attrs.pop("href", None)
-browse.find_parent("section").attrs["id"] = "roles"
+roles_section = browse.find_parent("section")
+roles_section.attrs["id"] = "roles"
 
 # ---------------------------------------------------------------- results shell
 results_section = only(soup.find("section", class_=lambda c: c and "z-0" in c), "results section")
@@ -188,6 +189,11 @@ showmore["class"] = ["hidden", "block", "w-full", "p-4", "text-center", "rounded
                      "cursor-pointer", "font-medium"]
 showmore.string = "Show more results"
 shell.append(BeautifulSoup('<p id="result-count" class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400"></p>', "html.parser"))
+
+# upstream put its default postings above the role index and its (hidden) search
+# -results shell below it; we render live jobs into that shell, so the index has
+# to move down or the postings end up under it
+results_section.insert_after(roles_section)
 
 # ---------------------------------------------------------------- footer
 footer = only(soup.find("footer"), "footer")

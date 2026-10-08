@@ -35,6 +35,13 @@ export function readFilters(form, role) {
   };
 }
 
+// upstream flagged same-day postings with a green "New" badge; a 24h window is
+// close enough and immune to the viewer's timezone
+export const isFresh = (iso) => {
+  const t = Date.parse(iso);
+  return Number.isFinite(t) && Date.now() - t < 864e5;
+};
+
 export function relativeTime(iso) {
   const then = Date.parse(iso);
   if (!Number.isFinite(then)) return "";
@@ -57,6 +64,9 @@ function row(job) {
     : `<span class="size-full flex items-center justify-center text-base font-semibold text-gray-500" style="background:hsl(${hue(job.company)} 55% 92%)">${esc((job.company || "?").trim()[0])}</span>`;
   const pill = (label, icon) => `<a class="text-xs text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-800 font-medium uppercase tracking-wide flex items-center gap-1 rounded-full pl-1 pr-2 py-0.5 border border-gray-950/10 dark:border-white/10" href="#jobs" data-pill="${label.toLowerCase()}"><svg class="size-3" aria-hidden="true" data-slot="icon"><use href="#icon-micro-${icon}"></use></svg>${label}</a>`;
   const place = job.location || "";
+  const fresh = isFresh(job.posted)
+    ? `<span class="text-xs text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/50 font-medium uppercase tracking-wide rounded-full px-2 py-0.5 ring-1 ring-green-600/20 dark:ring-green-400/30 ring-inset">New</span>`
+    : "";
   return `<div class="isolate group/post grid grid-cols-9 relative gap-2 p-3 items-center w-full hover:bg-gray-50 dark:hover:bg-gray-800/50">
   <div class="col-span-8 flex sm:items-center gap-3">
     <div class="relative block shrink-0 size-10 overflow-hidden bg-white dark:bg-gray-100 rounded-sm">
@@ -75,6 +85,7 @@ function row(job) {
           <div class="z-10">${job.remote ? pill("Remote", "wifi") : job.arrangement === "hybrid" ? pill("Hybrid", "home") : ""}</div>
           <span class="text-gray-400 dark:text-gray-500">&middot;</span>
           <time datetime="${esc(job.posted)}" class="text-gray-500 dark:text-gray-400">${esc(relativeTime(job.posted))}</time>
+          ${fresh}
         </div>
       </div>
     </div>
